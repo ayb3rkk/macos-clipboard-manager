@@ -186,7 +186,7 @@ struct ClipboardItemRow: View {
     let isCopied: Bool
     
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(alignment: .top, spacing: 8) {
             // Item type icon
             Image(systemName: item.type.iconName)
                 .font(.system(size: 14))
@@ -215,26 +215,32 @@ struct ClipboardItemRow: View {
                 }
             }
             
-            Spacer()
+            Spacer(minLength: 8)
             
-            // Copy indicator
-            if isCopied {
-                HStack(spacing: 4) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 12))
-                        .foregroundColor(.green)
+            // Copy indicator (text only, always reserve space to prevent layout shifts)
+            HStack {
+                if isCopied {
                     Text("Copied!")
                         .font(.caption2)
                         .foregroundColor(.green)
                         .fontWeight(.medium)
+                } else if isHovered {
+                    Text("Copy")
+                        .font(.caption2)
+                        .foregroundColor(.accentColor)
+                        .fontWeight(.medium)
+                } else {
+                    // Reserve space even when nothing is shown
+                    Text("Copied!")
+                        .font(.caption2)
+                        .opacity(0)
+                        .fontWeight(.medium)
                 }
-            } else if isHovered {
-                Image(systemName: "doc.on.doc")
-                    .font(.system(size: 12))
-                    .foregroundColor(.accentColor)
             }
+            .frame(width: 40, alignment: .trailing)
         }
-        .padding(.horizontal, 12)
+        .padding(.leading, 12)
+        .padding(.trailing, 4)
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 6)
