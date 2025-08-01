@@ -66,6 +66,7 @@ struct ContentView: View {
     @EnvironmentObject var appSettings: AppSettings
     @State private var hoveredItemId: UUID? = nil
     @State private var showingSettings = false
+    @State private var copiedItemId: UUID? = nil
     
     var body: some View {
         VStack(spacing: 0) {
@@ -121,10 +122,21 @@ struct ContentView: View {
                         ForEach(clipboardStore.items) { item in
                             ClipboardItemRow(
                                 item: item,
-                                isHovered: hoveredItemId == item.id
+                                isHovered: hoveredItemId == item.id,
+                                isCopied: copiedItemId == item.id
                             )
                             .onTapGesture {
                                 clipboardStore.copyItemToClipboard(item)
+                                
+                                // Show copied indicator
+                                copiedItemId = item.id
+                                
+                                // Hide indicator after 1 second
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                    if copiedItemId == item.id {
+                                        copiedItemId = nil
+                                    }
+                                }
                             }
                             .onHover { isHovering in
                                 hoveredItemId = isHovering ? item.id : nil
@@ -171,6 +183,7 @@ struct ContentView: View {
 struct ClipboardItemRow: View {
     let item: ClipboardItem
     let isHovered: Bool
+    let isCopied: Bool
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -205,7 +218,17 @@ struct ClipboardItemRow: View {
             Spacer()
             
             // Copy indicator
-            if isHovered {
+            if isCopied {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.green)
+                    Text("Copied!")
+                        .font(.caption2)
+                        .foregroundColor(.green)
+                        .fontWeight(.medium)
+                }
+            } else if isHovered {
                 Image(systemName: "doc.on.doc")
                     .font(.system(size: 12))
                     .foregroundColor(.accentColor)
@@ -215,7 +238,11 @@ struct ClipboardItemRow: View {
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 6)
-                .fill(isHovered ? Color.accentColor.opacity(0.1) : Color.clear)
+                .fill(
+                    isCopied ? Color.green.opacity(0.15) :
+                    isHovered ? Color.accentColor.opacity(0.1) :
+                    Color.clear
+                )
         )
         .contentShape(Rectangle())
     }
