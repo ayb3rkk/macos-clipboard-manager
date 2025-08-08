@@ -106,14 +106,13 @@ struct ContentView: View {
             
             // Tabs (centered, no label)
             HStack {
-                Spacer()
                 Picker("", selection: $selectedTab) {
                     Text("Recent").tag(0)
                     Text("Saved").tag(1)
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
-                Spacer()
+                .frame(maxWidth: .infinity)
             }
             // No extra padding around tabs
 
