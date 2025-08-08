@@ -1,4 +1,5 @@
 import SwiftUI
+import Foundation
 
 // Settings View embedded within ContentView
 struct SettingsView: View {
@@ -184,6 +185,13 @@ struct ClipboardItemRow: View {
     let item: ClipboardItem
     let isHovered: Bool
     let isCopied: Bool
+    @EnvironmentObject var appSettings: AppSettings
+
+    private static let shortDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d, HH:mm"
+        return formatter
+    }()
     
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
@@ -201,9 +209,11 @@ struct ClipboardItemRow: View {
                     .multilineTextAlignment(.leading)
                 
                 HStack {
-                    Text(item.timestamp, format: .dateTime.hour().minute())
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+                    if appSettings.showTimestamps {
+                        Text(Self.shortDateFormatter.string(from: item.timestamp))
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
                     
                     Spacer()
                     

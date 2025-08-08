@@ -25,29 +25,19 @@ A powerful and elegant clipboard manager for macOS built with Swift and SwiftUI.
 
 ## Installation
 
-### Option 1: Build from Source
+### Build with the provided script
 
-1. **Clone or download the project**:
+1. Open Terminal at the project root
+2. Make the script executable and run it:
    ```bash
-   git clone <repository-url>
-   cd clipboard-manager
+   chmod +x build_app.sh
+   ./build_app.sh
    ```
+3. When the build succeeds, the app bundle is created at `build/ClipboardManager.app` and opened automatically.
 
-2. **Open in Xcode**:
-   ```bash
-   open ClipboardManager/ClipboardManager.xcodeproj
-   ```
-
-3. **Build and run**:
-   - Select your target device (Mac)
-   - Press `Cmd + R` to build and run
-   - The app will appear in your menu bar
-
-### Option 2: Direct Installation
-
-1. Extract the project files to your desired location
-2. Open `ClipboardManager.xcodeproj` in Xcode
-3. Build and run the project
+Notes:
+- The script currently builds for `x86_64` (Intel) by default. On Apple Silicon, either install Rosetta, or edit `build_app.sh` to change `-target x86_64-apple-macos13.0` to `-target arm64-apple-macos13.0` (or remove `-target` to use the default).
+- The script performs ad-hoc signing for local development.
 
 ## Usage
 
@@ -87,20 +77,17 @@ Click the gear icon (⚙️) in the popup to access settings:
 ## Project Structure
 
 ```
-ClipboardManager/
-├── ClipboardManager.xcodeproj/          # Xcode project file
+Mac/
+├── build_app.sh                         # Local build script (swiftc)
+├── README.md                            # This file
 └── ClipboardManager/                    # Source code
-    ├── ClipboardManagerApp.swift        # Main app entry point
-    ├── ContentView.swift                # Main UI view
-    ├── ClipboardMonitor.swift           # Clipboard monitoring logic
-    ├── ClipboardItem.swift              # Data model for clipboard items
-    ├── ClipboardStore.swift             # Data persistence and management
-    ├── AppSettings.swift                # User preferences and configuration
-    ├── MenuBarView.swift                # Menu bar icon view
-    ├── ClipboardPopover.swift           # Popup window view
-    ├── Assets.xcassets/                 # App icons and assets
-    ├── Preview Content/                 # SwiftUI preview assets
-    ├── ClipboardManager.entitlements    # App permissions
+    ├── ClipboardManagerApp.swift        # Main app entry point (MenuBarExtra)
+    ├── ContentView.swift                # Menu UI and inlined SettingsView
+    ├── ClipboardMonitor.swift           # Clipboard polling via NSPasteboard
+    ├── ClipboardItem.swift              # Data model and type detection
+    ├── ClipboardStore.swift             # State, FIFO, persistence
+    ├── AppSettings.swift                # User preferences
+    ├── ClipboardManager.entitlements    # App permissions (sandbox disabled for dev)
     └── Info.plist                       # App configuration
 ```
 
@@ -130,11 +117,11 @@ The app follows a clean MVVM architecture with SwiftUI:
 
 ### Content Detection
 
-The app intelligently detects content types using regular expressions:
-- **URLs**: Detects http/https/www patterns
-- **Emails**: Validates email format with regex
-- **Phone Numbers**: Identifies numeric patterns
-- **Code**: Detects programming syntax patterns
+The app detects content types with lightweight heuristics:
+- **URLs**: `http://`, `https://`, or `www.` prefix
+- **Emails**: Basic regex validation
+- **Phone Numbers**: Basic numeric length and optional `+`
+- **Code**: Presence of common syntax tokens (e.g., `{`, `}`, `func`, `class`, `import`)
 
 ## Configuration
 
@@ -158,7 +145,7 @@ All settings can be modified through the in-app settings panel:
 
 - **Local Storage Only**: All clipboard data is stored locally on your Mac
 - **No Network Access**: The app does not send any data over the network
-- **Sandboxed**: Runs in Apple's app sandbox for security
+- **Sandboxing (dev setting)**: The included entitlements file disables sandboxing for local development. Re-enable sandboxing before distribution.
 - **Minimal Permissions**: Only requires clipboard access
 
 ## Troubleshooting
@@ -190,19 +177,18 @@ The app logs activity to the console. To view logs:
 
 1. **Prerequisites**:
    - macOS 13.0+
-   - Xcode 15.0+
+   - Xcode 15.0+ (provides SDKs and toolchain)
    - Swift 5.9+
 
 2. **Build Steps**:
    ```bash
    # Clone repository
    git clone <repository-url>
-   cd clipboard-manager
-   
-   # Open in Xcode
-   open ClipboardManager/ClipboardManager.xcodeproj
-   
-   # Build and run (Cmd+R)
+   cd Mac
+
+   # Build and run
+   chmod +x build_app.sh
+   ./build_app.sh
    ```
 
 3. **Project Configuration**:
@@ -210,6 +196,21 @@ The app logs activity to the console. To view logs:
    - Bundle ID: `com.clipboardmanager.app`
    - Category: Utilities
    - LSUIElement: YES (menu bar only app)
+
+Note: There is no Xcode project file in this repository; the app is built via `swiftc` using the script above.
+
+### Defaults
+
+- Maximum Items: 10
+- Menu Bar Icon: 📋
+- Show Timestamps: Enabled by default
+- Monitoring Interval: 0.5 seconds
+
+### Known Limitations
+
+- Captures text-only clipboard content (`.string`). Images/files and rich types are not captured.
+- Duplicate suppression only prevents immediate consecutive duplicates.
+- The local build script targets `x86_64` by default; adjust for Apple Silicon as needed.
 
 ### Code Organization
 
